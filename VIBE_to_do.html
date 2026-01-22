@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>VIBE | Task Management System</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-deep: #080a0f;
+            --bg-card: rgba(17, 24, 39, 0.85);
+            --primary: #0ea5e9;
+            --secondary: #6366f1;
+            --gold: #fbbf24;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --text-1: #f8fafc;
+            --text-2: #94a3b8;
+            --border: rgba(255, 255, 255, 0.1);
+            --glass: blur(25px);
+            --shadow: 0 25px 50px rgba(0,0,0,0.5);
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Plus Jakarta Sans', sans-serif; }
+
+        body {
+            background: var(--bg-deep);
+            color: var(--text-1);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-image: 
+                radial-gradient(circle at 0% 0%, rgba(14, 165, 233, 0.12) 0%, transparent 50%),
+                radial-gradient(circle at 100% 100%, rgba(99, 102, 241, 0.12) 0%, transparent 50%);
+        }
+
+        .app-wrapper {
+            width: min(96%, 1200px);
+            height: 850px;
+            background: var(--bg-card);
+            backdrop-filter: var(--glass);
+            border: 1px solid var(--border);
+            border-radius: 32px;
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* --- SIDEBAR --- */
+        aside {
+            background: rgba(0, 0, 0, 0.3);
+            border-right: 1px solid var(--border);
+            padding: 40px 24px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .logo-box { display: flex; align-items: center; gap: 15px; margin-bottom: 40px; }
+        .logo-icon {
+            width: 45px; height: 45px; background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border-radius: 14px; display: grid; place-items: center; font-weight: 800; font-size: 22px; color: white;
+            box-shadow: 0 10px 20px rgba(14, 165, 233, 0.3);
+        }
+
+        .nav-list { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+        .nav-link {
+            padding: 15px 20px; border-radius: 16px; cursor: pointer; transition: var(--transition);
+            color: var(--text-2); display: flex; align-items: center; gap: 12px; font-weight: 600;
+        }
+        .nav-link:hover, .nav-link.active { background: rgba(255, 255, 255, 0.05); color: var(--primary); }
+        .nav-link.active { background: linear-gradient(90deg, rgba(14, 165, 233, 0.1) 0%, transparent 100%); border-left: 4px solid var(--primary); }
+
+        /* --- MAIN CONTENT --- */
+        main { padding: 40px; overflow-y: auto; display: flex; flex-direction: column; gap: 30px; position: relative; }
+
+        .header-top { display: flex; justify-content: space-between; align-items: center; }
+        #digital-clock { font-size: 26px; font-weight: 800; letter-spacing: 1px; }
+        #current-date { color: var(--text-2); font-size: 14px; margin-top: 5px; }
+
+        .lang-switcher {
+            background: #111; color: white; border: 1px solid var(--border);
+            padding: 10px 15px; border-radius: 12px; cursor: pointer; font-weight: 600; outline: none;
+        }
+
+        .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+        .stat-card { background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border); padding: 25px; border-radius: 24px; text-align: center; }
+        .stat-value { font-size: 32px; font-weight: 800; display: block; margin-top: 10px; color: var(--primary); }
+
+        /* --- INPUT AREA --- */
+        .task-creator {
+            display: flex; gap: 15px; background: rgba(0, 0, 0, 0.2); padding: 12px;
+            border-radius: 20px; border: 1px solid var(--border);
+        }
+        .main-input { flex: 1; background: transparent; border: none; color: white; padding: 10px 15px; font-size: 16px; outline: none; }
+        .add-btn {
+            background: var(--primary); color: white; border: none; width: 50px; height: 50px;
+            border-radius: 15px; cursor: pointer; font-size: 24px; transition: var(--transition);
+        }
+        .add-btn:hover { transform: scale(1.05); background: var(--secondary); }
+
+        /* --- TASK LIST --- */
+        .task-container { display: flex; flex-direction: column; gap: 12px; }
+        .task-item {
+            background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border);
+            padding: 20px 25px; border-radius: 22px; display: flex; align-items: center;
+            justify-content: space-between; transition: var(--transition);
+        }
+        .task-item:hover { border-color: var(--primary); background: rgba(255,255,255,0.05); }
+        .task-item.completed { opacity: 0.5; background: rgba(0,0,0,0.1); }
+        .task-item.completed .task-text { text-decoration: line-through; }
+
+        .check-box {
+            width: 26px; height: 26px; border: 2px solid var(--primary); border-radius: 8px;
+            cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.2s;
+        }
+        .task-item.completed .check-box { background: var(--primary); }
+        
+        .action-buttons { display: flex; gap: 8px; }
+        .btn-icon { border: none; padding: 10px; border-radius: 12px; cursor: pointer; transition: 0.2s; font-size: 14px; }
+        .btn-delete { background: rgba(239, 68, 68, 0.1); color: var(--danger); }
+        .btn-delete:hover { background: var(--danger); color: white; }
+        .btn-edit { background: rgba(245, 158, 11, 0.1); color: var(--warning); }
+        .btn-edit:hover { background: var(--warning); color: black; }
+
+        /* --- NEW SETTINGS LAYOUT --- */
+        #settings-view { display: none; grid-template-columns: 1.5fr 1fr; gap: 20px; animation: fadeIn 0.3s; }
+        @media (max-width: 900px) { #settings-view { grid-template-columns: 1fr; } }
+        
+        .settings-card { background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border); padding: 30px; border-radius: 24px; }
+        
+        /* PRO Card Styles */
+        .pro-card {
+            background: linear-gradient(135deg, rgba(251, 191, 36, 0.1), rgba(0,0,0,0));
+            border: 1px solid rgba(251, 191, 36, 0.3); position: relative; overflow: hidden;
+        }
+        .pro-card::before {
+            content: ''; position: absolute; top: -50px; right: -50px; width: 100px; height: 100px;
+            background: var(--gold); filter: blur(60px); opacity: 0.5;
+        }
+        .pro-badge { background: var(--gold); color: black; padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: 800; text-transform: uppercase; }
+        
+        .upgrade-btn {
+            width: 100%; padding: 15px; margin-top: 20px; border-radius: 16px; border: none;
+            background: linear-gradient(90deg, #F59E0B, #D97706); color: white; font-weight: 700; cursor: pointer;
+            box-shadow: 0 10px 20px rgba(245, 158, 11, 0.2); transition: 0.3s;
+        }
+        .upgrade-btn:hover { transform: translateY(-2px); box-shadow: 0 15px 30px rgba(245, 158, 11, 0.3); }
+
+        .settings-list { margin-top: 20px; display: flex; flex-direction: column; gap: 10px; }
+        .settings-item {
+            padding: 15px; border-radius: 16px; background: rgba(255,255,255,0.03); cursor: pointer;
+            display: flex; align-items: center; justify-content: space-between; transition: 0.2s; border: 1px solid transparent;
+        }
+        .settings-item:hover { background: rgba(255,255,255,0.06); border-color: var(--border); }
+        .item-icon { margin-right: 15px; font-size: 20px; }
+        
+        .logout-item { color: var(--danger); margin-top: 20px; border: 1px solid rgba(239, 68, 68, 0.2); }
+        .logout-item:hover { background: rgba(239, 68, 68, 0.1); }
+
+        /* --- MODALS (Payment & Guide) --- */
+        .modal-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 10001;
+            display: none; align-items: center; justify-content: center; backdrop-filter: blur(10px);
+        }
+        .modal-card { width: 400px; background: #111; padding: 30px; border-radius: 30px; border: 1px solid var(--border); text-align: center; position: relative; }
+        .close-modal { position: absolute; top: 15px; right: 20px; cursor: pointer; font-size: 20px; color: var(--text-2); }
+        
+        /* --- AUTH --- */
+        #auth-overlay { position: absolute; inset: 0; background: var(--bg-deep); z-index: 9999; display: flex; align-items: center; justify-content: center; }
+        .auth-card { width: 420px; background: var(--bg-card); padding: 50px; border-radius: 35px; border: 1px solid var(--border); text-align: center; box-shadow: var(--shadow); }
+        .auth-input { width: 100%; background: rgba(0,0,0,0.3); border: 1px solid var(--border); padding: 18px; border-radius: 18px; color: white; margin-bottom: 15px; outline: none; }
+        .auth-btn { width: 100%; padding: 18px; background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white; border: none; border-radius: 18px; font-weight: 700; cursor: pointer; font-size: 16px; }
+
+        #toast { position: fixed; bottom: 30px; right: 30px; padding: 16px 30px; border-radius: 16px; background: var(--success); color: white; font-weight: 700; display: none; z-index: 10000; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+
+    <div class="app-wrapper">
+        <aside>
+            <div class="logo-box">
+                <div class="logo-icon">V</div>
+                <h2 style="font-weight: 800; letter-spacing: 1px;">VIBE</h2>
+            </div>
+            <nav class="nav-list">
+                <li class="nav-link active" data-filter="all">📋 <span data-i18n="navAll">Barchasi</span></li>
+                <li class="nav-link" data-filter="active">⚡ <span data-i18n="navActive">Faol</span></li>
+                <li class="nav-link" data-filter="completed">✅ <span data-i18n="navCompleted">Bajarilgan</span></li>
+                <li class="nav-link" data-filter="settings">⚙️ <span data-i18n="navSettings">Sozlamalar</span></li>
+            </nav>
+            </aside>
+
+        <main id="main-content" style="display: none;">
+            <header class="header-top">
+                <div class="clock-area">
+                    <div id="digital-clock">00:00:00</div>
+                    <div id="current-date">Yuklanmoqda...</div>
+                </div>
+                <div class="controls">
+                    <select id="lang-select" class="lang-switcher">
+                        <option value="uz">UZB</option>
+                        <option value="en">ENG</option>
+                        <option value="ru">RUS</option>
+                    </select>
+                </div>
+            </header>
+
+            <div id="dashboard-view">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <small style="color:var(--text-2)" data-i18n="statTotal">JAMI VAZIFALAR</small>
+                        <span class="stat-value" id="count-total">0</span>
+                    </div>
+                    <div class="stat-card">
+                        <small style="color:var(--text-2)" data-i18n="statPending">KUTILMOQDA</small>
+                        <span class="stat-value" id="count-pending" style="color: var(--warning);">0</span>
+                    </div>
+                    <div class="stat-card">
+                        <small style="color:var(--text-2)" data-i18n="statRate">NATIJA</small>
+                        <span class="stat-value" id="count-rate" style="color: var(--success);">0%</span>
+                    </div>
+                </div>
+    
+                <div class="task-creator" style="margin-top: 30px;">
+                    <input type="text" id="task-input" class="main-input" placeholder="Yangi maqsad yozing..." data-i18n-p="inputP">
+                    <button class="add-btn" id="add-btn">+</button>
+                </div>
+    
+                <div id="task-list" class="task-container" style="margin-top: 30px;"></div>
+            </div>
+
+            <div id="settings-view">
+                <div style="display: flex; flex-direction: column; gap: 20px;">
+                    <div class="settings-card pro-card">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                            <div>
+                                <span class="pro-badge">PRO PLAN</span>
+                                <h3 style="font-size: 24px; margin-top: 10px; margin-bottom: 5px;">Cheklovsiz bo'ling</h3>
+                                <p style="color: var(--text-2); font-size: 14px;">Barcha imkoniyatlar, statistika va reklamasiz rejim.</p>
+                            </div>
+                        </div>
+                        <ul style="margin: 20px 0; list-style: none; color: var(--text-2); font-size: 14px; line-height: 1.6;">
+                            <li>✨ Cheksiz vazifalar</li>
+                            <li>📊 To'liq haftalik hisobot</li>
+                            <li>🎨 Premium mavzular (Themes)</li>
+                        </ul>
+                        <div style="font-size: 28px; font-weight: 800; color: white;">$4.99 <span style="font-size: 14px; color: var(--text-2); font-weight: 400;">/oyiga</span></div>
+                        <button class="upgrade-btn" onclick="App.openModal('payment')">⚡ PRO Versiyaga O'tish</button>
+                    </div>
+
+                    <div class="settings-card">
+                        <h3 style="margin-bottom: 15px;" data-i18n="supportTitle">Yordam va Qo'llanma</h3>
+                        <div class="settings-list">
+                            <div class="settings-item" onclick="App.openModal('guide')">
+                                <span style="display:flex; align-items:center;"><span class="item-icon">📚</span> <span data-i18n="guideBtn">Qo'llanma</span></span>
+                                <span>›</span>
+                            </div>
+                            <div class="settings-item" onclick="window.open('https://t.me/Abubakrmirzaev', '_blank')">
+                                <span style="display:flex; align-items:center;"><span class="item-icon">💬</span> <span data-i18n="supportBtn">Call Support (Telegram)</span></span>
+                                <span>↗</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="display: flex; flex-direction: column; gap: 20px;">
+                    <div class="settings-card">
+                        <h3 style="margin-bottom: 15px;">Mening hisobim</h3>
+                        <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px;">
+                            <div style="width: 50px; height: 50px; background: #333; border-radius: 50%; display: grid; place-items: center; font-size: 20px;">👤</div>
+                            <div>
+                                <div id="user-email-display" style="font-weight: 700;">user@email.com</div>
+                                <div style="font-size: 13px; color: var(--text-2);">Free Plan</div>
+                            </div>
+                        </div>
+                        
+                        <div class="settings-list">
+                            <div class="settings-item" onclick="App.clearAll()">
+                                <span style="display:flex; align-items:center; color: var(--text-2);"><span class="item-icon">🗑️</span> <span data-i18n="clearData">Ma'lumotlarni tozalash</span></span>
+                            </div>
+                            <div class="settings-item logout-item" onclick="App.logout()">
+                                <span style="display:flex; align-items:center;"><span class="item-icon">🚪</span> <span data-i18n="logout">Chiqish</span></span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="settings-card" style="text-align: center;">
+                        <p style="color: var(--text-2); font-size: 12px;">VIBE System v6.0<br>Secure & Encrypted</p>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <div id="auth-overlay">
+            <div class="auth-card">
+                <div class="logo-icon" style="margin: 0 auto 30px; width: 60px; height: 60px; font-size: 30px;">V</div>
+                <h2 style="margin-bottom: 10px;" data-i18n="authTitle">Xush kelibsiz</h2>
+                <p style="color: var(--text-2); margin-bottom: 30px;" data-i18n="authSubtitle">Akkauntingizga kiring</p>
+                <input type="email" id="email-field" class="auth-input" placeholder="Email manzilingiz">
+                <input type="password" id="pass-field" class="auth-input" placeholder="Maxfiy kod">
+                <button class="auth-btn" id="login-action" data-i18n="loginBtn">Tizimga kirish</button>
+            </div>
+        </div>
+
+        <div id="payment-modal" class="modal-overlay">
+            <div class="modal-card">
+                <span class="close-modal" onclick="App.closeModals()">✕</span>
+                <div style="font-size: 40px; margin-bottom: 10px;">💳</div>
+                <h2 style="color: white; margin-bottom: 10px;">PRO Versiyaga O'tish</h2>
+                <p style="color: var(--text-2); margin-bottom: 20px;">To'lovni amalga oshirish usulini tanlang:</p>
+                
+                <div style="display: grid; gap: 10px;">
+                    <button class="settings-item" style="justify-content: center; font-weight: 600;">Click / Payme</button>
+                    <button class="settings-item" style="justify-content: center; font-weight: 600;">Visa / Mastercard</button>
+                    <button class="settings-item" style="justify-content: center; font-weight: 600;">Crypto (USDT)</button>
+                </div>
+                <p style="font-size: 12px; color: var(--text-2); margin-top: 20px;">Bu demo versiya. Pul yechilmaydi.</p>
+            </div>
+        </div>
+
+        <div id="guide-modal" class="modal-overlay">
+            <div class="modal-card" style="text-align: left;">
+                <span class="close-modal" onclick="App.closeModals()">✕</span>
+                <h2 style="color: var(--primary); margin-bottom: 15px;">Dastur qo'llanmasi</h2>
+                <ul style="color: var(--text-1); line-height: 1.8; margin-left: 20px;">
+                    <li>1. Yangi maqsad yozing va <b>Enter</b> bosing.</li>
+                    <li>2. Vazifa bajarilgach, yonidagi katakchani bosing.</li>
+                    <li>3. O'zgartirish uchun ✏️ qalam tugmasidan foydalaning.</li>
+                    <li>4. O'chirish uchun ✕ tugmasini bosing.</li>
+                    <li>5. PRO versiyada ko'proq imkoniyatlar mavjud.</li>
+                </ul>
+                <button class="auth-btn" style="margin-top: 20px; padding: 12px;" onclick="App.closeModals()">Tushunarli</button>
+            </div>
+        </div>
+
+    </div>
+
+    <div id="toast"></div>
+
+    <script>
+        const i18n = {
+            uz: {
+                navAll: "Barchasi", navActive: "Faol", navCompleted: "Bajarilgan", navSettings: "Sozlamalar",
+                logout: "Chiqish", statTotal: "JAMI VAZIFALAR", statPending: "KUTILMOQDA",
+                statRate: "NATIJA", inputP: "Yangi maqsad yozing...",
+                authTitle: "Xush kelibsiz", authSubtitle: "Akkauntingizga kiring", loginBtn: "Tizimga kirish",
+                msgAdded: "Vazifa saqlandi!", msgDeleted: "O'chirildi!", msgEdited: "O'zgartirildi!", msgCleared: "Barchasi tozalandi!",
+                supportTitle: "Yordam va Qo'llanma", guideBtn: "Qo'llanma", supportBtn: "Call Support (Telegram)",
+                clearData: "Ma'lumotlarni tozalash", promptEdit: "Vazifani tahrirlang:", locale: 'uz-UZ'
+            },
+            en: {
+                navAll: "All Tasks", navActive: "Active", navCompleted: "Completed", navSettings: "Settings",
+                logout: "Logout", statTotal: "TOTAL TASKS", statPending: "PENDING",
+                statRate: "EFFICIENCY", inputP: "Write a new mission...",
+                authTitle: "Welcome Back", authSubtitle: "Login to your account", loginBtn: "Sign In",
+                msgAdded: "Mission Deployed!", msgDeleted: "Archived!", msgEdited: "Updated!", msgCleared: "All Data Cleared!",
+                supportTitle: "Help & Guide", guideBtn: "User Guide", supportBtn: "Contact Support",
+                clearData: "Clear Data", promptEdit: "Edit task:", locale: 'en-US'
+            },
+            ru: {
+                navAll: "Все задачи", navActive: "Активные", navCompleted: "Выполнено", navSettings: "Настройки",
+                logout: "Выйти", statTotal: "ВСЕГО ЗАДАЧ", statPending: "ОЖИДАЕТСЯ",
+                statRate: "ПРОГРЕСС", inputP: "Напишите новую цель...",
+                authTitle: "С возвращением", authSubtitle: "Войдите в систему", loginBtn: "Войти",
+                msgAdded: "Задача добавлена!", msgDeleted: "Удалено!", msgEdited: "Изменено!", msgCleared: "Все удалено!",
+                supportTitle: "Помощь", guideBtn: "Инструкция", supportBtn: "Техподдержка",
+                clearData: "Очистить данные", promptEdit: "Редактировать:", locale: 'ru-RU'
+            }
+        };
+
+        let state = {
+            currentUser: localStorage.getItem('nova_session') || null,
+            tasks: [],
+            lang: localStorage.getItem('nova_lang') || 'uz',
+            filter: 'all'
+        };
+
+        const App = {
+            init() {
+                this.bindEvents();
+                this.updateClock();
+                this.applyLang();
+                
+                if (state.currentUser) {
+                    this.showApp();
+                }
+
+                setInterval(() => this.updateClock(), 1000);
+            },
+
+            bindEvents() {
+                document.getElementById('login-action').onclick = () => this.login();
+                document.getElementById('add-btn').onclick = () => this.addTask();
+                document.getElementById('lang-select').onchange = (e) => this.setLang(e.target.value);
+                document.getElementById('task-input').onkeydown = (e) => e.key === 'Enter' && this.addTask();
+                
+                document.querySelectorAll('.nav-link').forEach(link => {
+                    link.onclick = () => {
+                        document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+                        link.classList.add('active');
+                        
+                        const filterType = link.dataset.filter;
+                        state.filter = filterType;
+
+                        if (filterType === 'settings') {
+                            document.getElementById('dashboard-view').style.display = 'none';
+                            document.getElementById('settings-view').style.display = 'grid';
+                        } else {
+                            document.getElementById('settings-view').style.display = 'none';
+                            document.getElementById('dashboard-view').style.display = 'block';
+                            this.render();
+                        }
+                    };
+                });
+            },
+
+            login() {
+                const email = document.getElementById('email-field').value.trim();
+                const pass = document.getElementById('pass-field').value;
+                if (email && pass.length > 2) {
+                    state.currentUser = email;
+                    localStorage.setItem('nova_session', email);
+                    this.showApp();
+                } else {
+                    alert("Email va parolni kiriting!");
+                }
+            },
+
+            showApp() {
+                document.getElementById('auth-overlay').style.display = 'none';
+                document.getElementById('main-content').style.display = 'flex';
+                document.getElementById('user-email-display').textContent = state.currentUser;
+                this.loadData();
+            },
+
+            loadData() {
+                const saved = localStorage.getItem(`tasks_v4_${state.currentUser}`);
+                state.tasks = saved ? JSON.parse(saved) : [];
+                this.render();
+            },
+
+            save() {
+                localStorage.setItem(`tasks_v4_${state.currentUser}`, JSON.stringify(state.tasks));
+                this.updateStats();
+            },
+
+            // addTask funksiyasini quyidagicha almashtiring:
+
+addTask() {
+    // 1. Foydalanuvchi PRO ekanligini tekshirish (hozircha hamma FREE)
+    const isPro = localStorage.getItem(`vibe_pro_status_${state.currentUser}`) === 'true';
+    
+    // 2. Agar PRO bo'lmasa va vazifalar soni 5 tadan oshgan bo'lsa
+    if (!isPro && state.tasks.length >= 5) {
+        this.showLimitModal(); // Limit haqida ogohlantirish
+        return;
+    }
+
+    const input = document.getElementById('task-input');
+    const text = input.value.trim();
+
+    if (text === "") return;
+
+    state.tasks.unshift({ 
+        id: Date.now(), 
+        text: text, 
+        completed: false 
+    });
+
+    input.value = '';
+    this.save();
+    this.render();
+    this.toast(i18n[state.lang].msgAdded);
+},
+
+// Limit oynasini ko'rsatish funksiyasi
+showLimitModal() {
+    const modalHtml = `
+        <div id="limit-modal" class="modal-overlay" style="display: flex;">
+            <div class="modal-card" style="border: 2px solid var(--gold);">
+                <div style="font-size: 50px; margin-bottom: 20px;">⚠️</div>
+                <h2 style="color: var(--gold); margin-bottom: 15px;">Limitga yetdingiz!</h2>
+                <p style="color: var(--text-2); margin-bottom: 25px;">
+                    Bepul versiyada faqat 5 ta vazifa qo'shish mumkin. 
+                    Cheksiz imkoniyatlar uchun PRO versiyaga o'ting.
+                </p>
+                <button class="upgrade-btn" onclick="App.closeLimitModal(); App.openModal('payment')">
+                    🚀 PROga o'tish ($4.99)
+                </button>
+                <p onclick="App.closeLimitModal()" style="margin-top:15px; cursor:pointer; font-size:12px; color:var(--text-2);">
+                    Keyinroq sinab ko'raman
+                </p>
+            </div>
+        </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+},
+
+closeLimitModal() {
+    const modal = document.getElementById('limit-modal');
+    if(modal) modal.remove();
+},
+            toggle(id) {
+                state.tasks = state.tasks.map(t => t.id === id ? {...t, completed: !t.completed} : t);
+                this.save();
+                this.render();
+            },
+
+            editTask(id) {
+                const task = state.tasks.find(t => t.id === id);
+                if (!task) return;
+                const newText = prompt(i18n[state.lang].promptEdit, task.text);
+                if (newText && newText.trim() !== "") {
+                    task.text = newText.trim();
+                    this.save();
+                    this.render();
+                    this.toast(i18n[state.lang].msgEdited);
+                }
+            },
+
+            remove(id) {
+                state.tasks = state.tasks.filter(t => t.id !== id);
+                this.save();
+                this.render();
+                this.toast(i18n[state.lang].msgDeleted, "danger");
+            },
+
+            clearAll() {
+                if (confirm("Haqiqatan ham hamma ma'lumotni o'chirmoqchimisiz?")) {
+                    state.tasks = [];
+                    this.save();
+                    this.render();
+                    this.toast(i18n[state.lang].msgCleared, "danger");
+                }
+            },
+
+            openModal(type) {
+                if (type === 'payment') document.getElementById('payment-modal').style.display = 'flex';
+                if (type === 'guide') document.getElementById('guide-modal').style.display = 'flex';
+            },
+
+            closeModals() {
+                document.querySelectorAll('.modal-overlay').forEach(m => m.style.display = 'none');
+            },
+
+            render() {
+                const list = document.getElementById('task-list');
+                list.innerHTML = '';
+                const filtered = state.tasks.filter(t => {
+                    if (state.filter === 'active') return !t.completed;
+                    if (state.filter === 'completed') return t.completed;
+                    return true;
+                });
+
+                filtered.forEach(t => {
+                    const div = document.createElement('div');
+                    div.className = `task-item ${t.completed ? 'completed' : ''}`;
+                    div.innerHTML = `
+                        <div style="display:flex; align-items:center; gap:20px; flex:1;">
+                            <div class="check-box" onclick="App.toggle(${t.id})">${t.completed ? '✓' : ''}</div>
+                            <span class="task-text" style="font-weight:600;">${t.text}</span>
+                        </div>
+                        <div class="action-buttons">
+                            <button class="btn-icon btn-edit" onclick="App.editTask(${t.id})">✏️</button>
+                            <button class="btn-icon btn-delete" onclick="App.remove(${t.id})">✕</button>
+                        </div>
+                    `;
+                    list.appendChild(div);
+                });
+                this.updateStats();
+            },
+
+            updateStats() {
+                const total = state.tasks.length;
+                const pending = state.tasks.filter(t => !t.completed).length;
+                document.getElementById('count-total').textContent = total;
+                document.getElementById('count-pending').textContent = pending;
+                document.getElementById('count-rate').textContent = total ? Math.round(((total-pending)/total)*100) + '%' : '0%';
+            },
+
+            setLang(l) {
+                state.lang = l;
+                localStorage.setItem('nova_lang', l);
+                this.applyLang();
+                this.render();
+            },
+
+            applyLang() {
+                const d = i18n[state.lang];
+                document.querySelectorAll('[data-i18n]').forEach(el => {
+                    el.textContent = d[el.getAttribute('data-i18n')];
+                });
+                document.getElementById('task-input').placeholder = d.inputP;
+                document.getElementById('lang-select').value = state.lang;
+            },
+
+            updateClock() {
+                const now = new Date();
+                const d = i18n[state.lang];
+                document.getElementById('digital-clock').textContent = now.toLocaleTimeString(d.locale, {hour12: false});
+                document.getElementById('current-date').textContent = now.toLocaleDateString(d.locale, {weekday:'long', month:'long', day:'numeric'});
+            },
+
+            toast(msg, type = "success") {
+                const t = document.getElementById('toast');
+                t.textContent = msg;
+                t.style.background = type === "danger" ? "var(--danger)" : "var(--success)";
+                t.style.display = 'block';
+                setTimeout(() => t.style.display = 'none', 2000);
+            },
+
+            logout() {
+                localStorage.removeItem('nova_session');
+                state.currentUser = null;
+                state.tasks = [];
+                location.reload(); 
+            }
+        };
+
+        App.init();
+    </script>
+</body>
+</html>
